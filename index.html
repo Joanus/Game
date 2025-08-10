@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>《風口的那個人》— 懸疑互動故事 RPG</title>
+<style>
+  :root{
+    --bg:#0a0f1a; --bg2:#0d1324; --ink:#e9ecf5; --muted:#93a2c8;
+    --gold:#e6c671; --blue:#3aa7ff; --accent:#6ad1ff; --danger:#ff6b6b; --good:#40e0a8;
+    --shadow:0 10px 30px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{margin:0; font-family:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+    color:var(--ink); background: radial-gradient(1200px 700px at 70% -10%, #14213a44 0%, transparent 60%), linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%); overflow-x:hidden;}
+  .fog::before,.fog::after{content:""; position:fixed; left:-10vw; top:-10vh; width:130vw; height:130vh; background: radial-gradient(closest-side, rgba(255,255,255,.06), rgba(255,255,255,0) 60%), radial-gradient(closest-side, rgba(100,160,255,.08), rgba(0,0,0,0) 60%); filter: blur(20px); mix-blend-mode: screen; pointer-events:none; animation:drift 28s linear infinite}
+  .fog::after{animation-duration:42s; animation-direction:reverse; opacity:.7}
+  @keyframes drift{from{transform:translateX(0) translateY(0) rotate(0)} to{transform:translateX(4vw) translateY(2vh) rotate(1turn)}}
+  header{position:sticky; top:0; z-index:5; backdrop-filter:blur(8px); background:linear-gradient(180deg,#0b1222cc,#0b122200); border-bottom:1px solid #1d2742; padding:14px 18px 10px}
+  .title{display:flex; align-items:center; gap:12px; letter-spacing:.5px}
+  .title .dot{width:12px; height:12px; border-radius:50%; background: radial-gradient(circle at 30% 30%, #fff, var(--gold) 40%, #c49f45 60%, transparent 70%); box-shadow:0 0 16px #e6c671aa, 0 0 40px #3aa7ff33}
+  .title h1{font-size:20px; margin:0}
+  .subtitle{color:var(--muted); font-size:12px}
+  .wrap{max-width:960px; margin:24px auto; padding:0 16px 80px}
+  .panel{background:linear-gradient(180deg,#101731,#0c142a); border:1px solid #1d2742; border-radius:16px; box-shadow:var(--shadow); overflow:hidden}
+  .story{padding:22px; line-height:1.8; font-size:16px; text-shadow:0 1px 0 #000}
+  .scene-badge{display:inline-flex; align-items:center; gap:8px; color:#0b1324; background:linear-gradient(90deg,#e6c671,#9cd1ff); padding:6px 12px; border-radius:999px; font-weight:700; font-size:12px; letter-spacing:.4px; margin-bottom:8px}
+  .choices{display:grid; gap:10px; grid-template-columns:1fr; padding:0 22px 20px}
+  .choice{background:linear-gradient(180deg,#0f1a33,#0a1429); border:1px solid #203056; color:var(--ink); padding:14px 16px; border-radius:12px; text-align:left; cursor:pointer; transition:.2s transform,.3s border-color,.3s background}
+  .choice:hover{transform:translateY(-1px); border-color:#3b5ea3}
+  .choice strong{color:var(--gold)}
+  .disabled{opacity:.5; pointer-events:none}
+  .hud{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; padding:16px 18px; border-top:1px solid #1d2742; background:#0b1222cc}
+  .bar{display:flex; flex-direction:column; gap:6px; font-size:12px}
+  .bar .name{color:var(--muted)}
+  .track{height:10px; border-radius:8px; background:#0a132a; overflow:hidden; border:1px solid #203056}
+  .fill{height:100%; width:0%; background:linear-gradient(90deg,#1b9be0,#e6c671 60%, #40e0a8); box-shadow: inset 0 0 8px #000, 0 0 12px #6ad1ff66; transition:width .5s ease-in-out}
+  .footer{display:flex; gap:10px; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid #1d2742; background:#0b1222aa; font-size:12px; color:var(--muted)}
+  .btn{border:1px solid #2a3c66; background:#0f1a33; color:var(--ink); padding:8px 12px; border-radius:10px; cursor:pointer}
+  .btn:hover{border-color:#3a5fb0}
+  .log{margin-top:16px; background:linear-gradient(180deg,#0b1222,#0a0f1a); border:1px dashed #203056; border-radius:14px; padding:12px 14px; color:#b9c7ea}
+  details>summary{cursor:pointer; list-style:none; outline:none; user-select:none}
+  details>summary::-webkit-details-marker{display:none}
+  .log ul{margin:8px 0 0 18px; padding:0}
+  .log li{margin:8px 0; line-height:1.6}
+  .toast{position:fixed; right:16px; bottom:16px; z-index:40; display:flex; flex-direction:column; gap:8px}
+  .note{background:#0f1a33; border:1px solid #284074; color:#cfe6ff; padding:10px 12px; border-radius:10px; box-shadow:var(--shadow); animation:pop .25s ease-out}
+  @keyframes pop{from{transform:translateY(6px); opacity:0} to{transform:translateY(0); opacity:1}}
+  .modal{position:fixed; inset:0; background:#000000aa; display:none; align-items:center; justify-content:center; z-index:50}
+  .modal.show{display:flex}
+  .dialog{width:min(860px,92vw); max-height:90vh; overflow:auto; background:linear-gradient(180deg,#111a33,#0b1222); border:1px solid #304a7e; border-radius:16px; padding:18px 18px 8px; box-shadow:var(--shadow)}
+  .ending-title{font-size:20px; margin:6px 0 8px; color:var(--gold)}
+  .ending-body{line-height:1.9; color:#e9eefc}
+  .ending-tags{display:flex; gap:8px; flex-wrap:wrap; margin:8px 0 16px}
+  .tag{font-size:11px; color:#0b1324; background:linear-gradient(90deg,#e6c671,#9cd1ff); padding:4px 8px; border-radius:999px}
+  @media (max-width:720px){.hud{grid-template-columns:1fr 1fr} .title h1{font-size:16px}}
+</style>
+</head>
+<body class="fog">
+  <header>
+    <div class="title">
+      <span class="dot"></span>
+      <div>
+        <h1>《風口的那個人》— 懸疑互動故事 RPG</h1>
+        <div class="subtitle">孩子視角｜神秘感視覺｜精煉劇情｜每個選擇都改變結局</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <section class="panel" id="sceneBox">
+      <div class="story" id="story">
+        <span class="scene-badge">序章・風起</span>
+        <p id="text">那天放學我在校門口的轉角遇見一個戴著深藍鴨舌帽的男人。風把路邊的廣告紙吹得呼啦作響，他卻伸手把一張皺巴巴的紙塞給我，
+          聲音像被風刮過：<em>「別等到風真的吹來，才找地方躲。」 </em> 我還來不及問他是誰，他已經被人潮吞沒，我把紙夾進書包，晚飯桌一切如常，但窗縫裡漏進來的風，讓我忽然想起那行字，像遠方的雷，暫時不響，卻讓人不安地等待下一聲。</p>
+      </div>
+      <div class="choices" id="choices"></div>
+      <div class="hud">
+        <div class="bar"><div class="name">心境（韌性）</div><div class="track"><div class="fill" id="b-mind"></div></div></div>
+        <div class="bar"><div class="name">家庭安全感</div><div class="track"><div class="fill" id="b-safe"></div></div></div>
+        <div class="bar"><div class="name">人際支持</div><div class="track"><div class="fill" id="b-social"></div></div></div>
+        <div class="bar"><div class="name">風險預備</div><div class="track"><div class="fill" id="b-prep"></div></div></div>
+      </div>
+      <div class="footer">
+        <div>進度：<span id="stepNow">序章</span></div>
+        <div><button class="btn" id="restartBtn">重新開始</button></div>
+      </div>
+    </section>
+
+    <section class="log">
+      <details open>
+        <summary>📜 選擇歷程（自動紀錄）</summary>
+        <ul id="history"></ul>
+      </details>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <div class="modal" id="endingModal" aria-modal="true" role="dialog">
+    <div class="dialog">
+      <div class="ending-title" id="endingTitle">結局</div>
+      <div class="ending-tags" id="endingTags"></div>
+      <div class="ending-body" id="endingBody"></div>
+      <div style="display:flex; gap:8px; margin:16px 0 10px">
+        <button class="btn" id="again">再玩一次</button>
+        <button class="btn" id="close">關閉</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ——— 安全初始化：等 DOM 建好再跑 ———
+(function(){
+  function ready(fn){ if(document.readyState!=='loading'){ fn(); } else { document.addEventListener('DOMContentLoaded', fn); } }
+  ready(main);
+
+  function main(){
+    // 基本狀態
+    class GameState{
+      constructor(){
+        this.mind=45; this.safe=35; this.social=40; this.prep=45; // 風險預備 = 資金/資源緩衝
+        this.scene=0; this.flags={keptNote:false, toldParents:false, callNeighbor:false, investigate:false, readSecondNote:false};
+      }
+    }
+
+    // 快速取 DOM
+    const UI={
+      text:qs('#text'), choices:qs('#choices'), step:qs('#stepNow'),
+      bars:{ mind:qs('#b-mind'), safe:qs('#b-safe'), social:qs('#b-social'), prep:qs('#b-prep') },
+      toast:qs('#toast'), history:qs('#history'), modal:qs('#endingModal'),
+      endingTitle:qs('#endingTitle'), endingBody:qs('#endingBody'), endingTags:qs('#endingTags')
+    };
+    const game=new GameState();
+
+    // 工具
+    function qs(s){ const el=document.querySelector(s); if(!el) console.warn('缺少元素',s); return el; }
+    function notify(msg){ const n=el('div','note'); n.textContent=msg; UI.toast.appendChild(n); setTimeout(()=>n.remove(),2400); }
+    function el(tag, cls){ const d=document.createElement(tag); if(cls) d.className=cls; return d; }
+    function clamp(v){ return Math.max(0, Math.min(100, v)); }
+    function renderBars(){ UI.bars.mind.style.width=clamp(game.mind)+'%'; UI.bars.safe.style.width=clamp(game.safe)+'%'; UI.bars.social.style.width=clamp(game.social)+'%'; UI.bars.prep.style.width=clamp(game.prep)+'%'; }
+    function pushHistory(t){ const li=el('li'); li.textContent=t; UI.history.appendChild(li); }
+
+    // 遊戲流程
+    function reset(){ Object.assign(game,new GameState()); UI.history.innerHTML=''; UI.choices.innerHTML=''; UI.text.innerHTML='校門口的風很急。那個戴深藍帽的人塞給我一張紙：<em>「別等到風真的吹來，才找地方躲。」</em>我抬頭，他已不見。我把紙夾進書包，晚飯桌一切如常，心裡卻像被輕輕敲了一下。'; UI.step.textContent='序章'; renderBars(); firstDecision(); }
+
+    function mkChoice(label, on){ const b=el('button','choice'); b.innerHTML=`<strong>選項：</strong>${label}`; b.onclick=()=>{ b.classList.add('disabled'); try{ on(); renderBars(); }catch(e){ console.error(e); notify('出現小問題，請再試一次'); } }; return b; }
+
+    function firstDecision(){ UI.choices.innerHTML=''; UI.step.textContent='決策一・紙條';
+      UI.choices.append(
+        mkChoice('先收好，觀察幾天再說。',()=>{ game.flags.keptNote=true; game.prep+=5; game.mind+=2; notify('風險預備 +5，心境 +2'); pushHistory('你藏起紙條：先觀察。'); scene1(); }),
+        mkChoice('晚餐拿出紙條，跟爸媽討論。',()=>{ game.flags.toldParents=true; game.social+=6; game.safe+=4; notify('人際支持 +6，家庭安全感 +4'); pushHistory('全家討論：開始談應變。'); scene1(); }),
+        mkChoice('把紙條丟了，別想太多。',()=>{ game.prep-=5; game.mind-=2; notify('風險預備 -5，心境 -2'); pushHistory('你忽略不安：丟掉紙條。'); scene1(); })
+      );
+    }
+
+    function scene1(){ UI.text.innerHTML='週末，媽媽開車載我去補習班，車上忽然傳來一聲乾脆的「啪」，車子慢慢失去力氣地滑向路肩。我聽見自己心臟咚咚，風從窗縫灌進來，帶著金屬味的冷。我遠遠看見那頂深藍帽，一閃而逝。媽媽低聲說：先保暖，再求援。忽然...紙片上的那行字在我腦裡變亮。'; UI.choices.innerHTML=''; UI.step.textContent='決策二・拋錨';
+      UI.choices.append(
+        mkChoice('主動求助：打電話給爸爸，或是找可聯絡的鄰居。',()=>{ game.social+=8; game.mind+=3; notify('人際支持 +8，心境 +3'); pushHistory('拋錨時你主動串聯鄰里。'); scene2(); }),
+        mkChoice('聯絡道路救援，然後拿出保暖與反光裝備。',()=>{ game.safe+=10; game.mind+=2; notify('家庭安全感 +10，心境 +2'); pushHistory('你執行標準應變流程。'); scene2(); }),
+        mkChoice('什麼也不做，等車自己好。',()=>{ game.mind-=6; game.safe-=6; notify('心境 -6，家庭安全感 -6'); pushHistory('你選擇碰運氣等待。'); scene2(); })
+      ); }
+
+    function scene2(){ UI.text.innerHTML='事故過後，家裡雖然仍有笑聲，但我開始注意到一些細小的縫隙：媽媽記帳時停頓得更久，爸爸下班回家會在玄關多站一會兒，像在計算什麼。某個傍晚，爸爸為了追一張被風捲走的文件，腳下一滑，重重摔在樓梯平台。急診室的燈又冷又白，媽媽緊握著我的手，指尖冰涼。醫師說需要休養一段時間，得暫停工作一段時間。好心的鄰居送來熱湯，說如果孩子上學需要接送，就去敲他們家的門。書包裡那張紙微微發熱，像在提醒下一步。'; UI.choices.innerHTML=''; UI.step.textContent='決策三・停擺';
+      UI.choices.append(
+        mkChoice('查找爸爸有沒有留下可以運用的物資，或可以幫忙的人。',()=>{ game.safe+=12; game.social+=4; game.mind+=2; notify('家庭安全感 +12，人際支持 +4，心境 +2'); pushHistory('你主動建立應變清單。'); scene3(); }),
+        mkChoice('請鄰居協助接送與採買，先撐過這段。',()=>{ game.social+=10; game.safe+=4; notify('人際支持 +10，家庭安全感 +4'); pushHistory('把人情網變成臨時支點。'); scene3(); }),
+        mkChoice('維持現狀，相信很快會好。',()=>{ game.safe-=10; game.mind-=4; notify('家庭安全感 -10，心境 -4'); pushHistory('你選擇不改變。'); scene3(); })
+      ); }
+
+    function scene3(){ UI.text.innerHTML='夜裡我發起高燒，媽媽抱著我往樓下衝，連續攔了幾輛計程車都被搶走，她的呼吸亂了節拍，正不知所措，剛好遇上鄰居阿姨，她說「真巧，我正要出門，快上車！」暖氣把我從發抖裡拉回來。阿姨一邊開車，一邊聊他們家有「緊急指南冊」，其中的清單還有每年挪一筆「風來預備金」。媽媽沉默了很久，只說了一句：「回家就開始準備。」'; UI.choices.innerHTML=''; UI.step.textContent='決策四・急夜';
+      UI.choices.append(
+        mkChoice('詢問鄰居阿姨，有沒有「鄰居群」Line，表示想加入，有困難時互相幫助。',()=>{ game.social+=12; game.safe+=6; game.mind+=2; notify('人際支持 +12，家庭安全感 +6，心境 +2'); pushHistory('把偶然相助轉為互助網。'); scene4(); }),
+        mkChoice('回家盤點：家裡有沒有備用藥品、親戚或朋友緊急聯絡人清單、演練與預備金。',()=>{ game.safe+=10; game.mind+=2; game.prep+=8; notify('家庭安全感 +10，風險預備 +8，心境 +2'); pushHistory('你補齊物資與資金緩衝。'); scene4(); }),
+        mkChoice('覺得自己運氣太好了，下次再說。',()=>{ game.mind-=4; game.prep-=8; notify('心境 -4，風險預備 -8'); pushHistory('你把連鎖巧合視為偶然。'); scene4(); })
+      ); }
+
+    function scene4(){ UI.text.innerHTML='病好之後的一個早晨，我在書包夾層找到那張皺紙。原本的字跡被覆寫了一行新的：<em>「風是提醒，不是懲罰。」</em>我盯著那行字，後背浮出一層細汗。爸爸在客廳做復健，餐桌上，媽媽把《緊急指南冊》寫上「風來預備金」。我忽然想起在校門口、在橋上、在街角看見的那個人——像風口的守望者。我想：下一步呢？'; UI.choices.innerHTML=''; UI.step.textContent='決策五・轉角';
+      UI.choices.append(
+        mkChoice('把紙條交給爸媽，再更紮實小冊子中的清單與預備金。',()=>{ game.safe+=10; game.social+=6; game.mind+=4; game.prep+=6; game.flags.readSecondNote=true; notify('家庭安全感 +10，人際支持 +6，風險預備 +6'); pushHistory('把謎團化成日常守護。'); ending(); }),
+        mkChoice('沿線索去找那個人。',()=>{ game.prep+=10; game.mind+=4; game.flags.investigate=true; game.flags.readSecondNote=true; notify('風險預備 +10，心境 +4'); pushHistory('直面未知，尋找風口守望者。'); ending(); }),
+        mkChoice('把紙條收回夾層，讓提醒留在心口。',()=>{ game.prep+=4; game.safe+=2; game.flags.keptNote=true; notify('風險預備 +4，家庭安全感 +2'); pushHistory('讓秘密繼續在夾層裡呼吸。'); ending(); })
+      ); }
+
+    function ending(){ UI.choices.innerHTML=''; UI.step.textContent='結局'; const m=game.mind,s=game.safe,n=game.social,p=game.prep; const hidden=game.flags.investigate && p>=65 && game.flags.readSecondNote; let title='', body='', tags=[];
+      if(hidden){ title='✨隱藏結局・風口的守望者'; tags=['線索串聯','風來預備金','覺察即保障']; body='我沿著記憶去找他：校門轉角、橋頭路燈、那晚巷口。第三天下午，他遞來一本小冊：圈著四字—鄰里、清單、備援、<strong>預備金</strong>。「不是預言，只是提醒。擋風靠彼此，也靠預先備好的資源。」回家後，小冊收入《緊急指南冊》。風聲還在，卻被網與預備金緩住力道。'; }
+      else if(s>=65 && n>=55 && m>=55 && p>=60){ title='🏆理想結局・風擋成形'; tags=['平衡發展','預備完成','資金緩衝']; body='《緊急指南冊》像生活說明書：聯絡樹、支援群、藥品與保暖、演練紀錄，以及每年固定的<strong>風來預備金</strong>。偶然不再把我們往下拉，反成為提醒與路標。'; }
+      else if(p>=70 && n<=48){ title='💼規劃結局・穩而孤'; tags=['專注規劃','人際偏弱','資金到位']; body='清單完善、預備金充足，我們較少麻煩別人。風被擋在門口，家很穩；只是樓上的熱湯少來了幾次，巷口招呼也變短。'; }
+      else if(n>=68 && s>=48 && p>=48){ title='🤝和諧結局・鄰里成網'; tags=['人情網','互助共好','備而不驚']; body='互助群運作起來：有人開車、有人記錄、有人修電器；同時維持<em>預備金</em>作為緩衝。停電那晚，整棟樓點起暖黃小燈，像一張會呼吸的網。'; }
+      else { title='💔現實結局・風穿過縫'; tags=['準備不足','靠運氣','代價浮現']; body='仍靠臨時巧合補洞。車拋錨、夜裡高燒、工作停擺勉強撐一下，卻在需要長期資源時捉襟見肘。那張紙像在等我們承認：清單缺了一格——可啟動的資金緩衝。'; }
+      showEnding(title,tags,body); }
+
+    function showEnding(title,tags,body){ UI.endingTitle.textContent=title; UI.endingBody.innerHTML=body; UI.endingTags.innerHTML=''; tags.forEach(t=>{ const s=el('span','tag'); s.textContent=t; UI.endingTags.appendChild(s); }); UI.modal.classList.add('show'); }
+
+    // 綁定
+    qs('#restartBtn').onclick=reset; qs('#again').onclick=()=>{ UI.modal.classList.remove('show'); reset(); }; qs('#close').onclick=()=>UI.modal.classList.remove('show');
+
+    // 啟動
+    renderBars(); firstDecision();
+  }
+})();
+</script>
+</body>
+</html>
